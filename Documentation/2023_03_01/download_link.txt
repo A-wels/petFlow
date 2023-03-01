@@ -1,0 +1,2 @@
+FlownetS trained for PET scans
+https://cloud.a-wels.de/index.php/s/Y3FCjqjFAxrmTZt

@@ -6,7 +6,7 @@ from os.path import *
 import re
 import os
 import cv2
-from utils.flow_viz import flow_to_image
+from core.utils.flow_viz import flow_to_image
 cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)
 
@@ -175,7 +175,7 @@ def read_gen(file_name, pil=False):
         mvf = np.fromfile(file_name, dtype=np.float32)
         is_3d = len(mvf) == 344*344*127*3
         if is_3d:
-           return convert_3dmvf_to_flo(file_name)
+           return convert_3dmvf_to_flo(mvf)
         else:
             flo_name = file_name.replace('.mvf', '.flo')
             if os.path.exists(flo_name):

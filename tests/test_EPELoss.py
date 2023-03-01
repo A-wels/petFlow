@@ -1,10 +1,9 @@
-import pytest
 import torch
 import sys
 import os
 
 sys.path.append(os.getcwd())
-from myutils.EPELoss import EPELoss
+from core.utils.EPELoss import EPELoss
 
 # class for testing nn.Module EPELoss
 class TestEPELoss:

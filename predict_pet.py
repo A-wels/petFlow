@@ -4,13 +4,13 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from core.flowNetS import FlowNetS
-from utils import flow_viz
+import core.utils.flow_viz as flow_viz
+import core.utils.frame_utils as frame_utils
 import cv2
-from utils import frame_utils
 from visualize_gt_flow import create_gif, generate_vector_visualization
 import os
 
-from utils.frame_utils import read_gen
+from core.utils.frame_utils import read_gen
 
 def load_model(model_path):
     model = FlowNetS()
