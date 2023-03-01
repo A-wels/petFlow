@@ -1,0 +1,18 @@
+# python gitignore
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# vscode files
+.vscode/
+
+# checkpoints
+*.pth
+*.pt
+checkpoints/
+
+# datasets
+datasets/
+
+
