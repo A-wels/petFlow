@@ -3,8 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from flowConv2d import FlowNetS
-from flowConv3d import OpticalFlow3D
+from core.flowNetS import FlowNetS
 from utils import flow_viz
 import cv2
 from utils import frame_utils

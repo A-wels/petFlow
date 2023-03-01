@@ -2,14 +2,14 @@ import argparse
 from tqdm import tqdm
 import torch
 import torch.nn as nn
-from flowConv2d import FlowNetS
-from flowConv2d import OpticalFlowDataset
-from utils.EPELoss import EPELoss
+from core.utils.EPELoss import EPELoss
 import numpy as np
+from core.flowNetS import FlowNetS
+from core.dataset_pet import PETDataset
 
 def validate(model, split='validation'):
     model.eval()
-    dataset = OpticalFlowDataset(split=split)
+    dataset = PETDataset(split=split)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, )
     epe_list = []
     criterion = EPELoss()
@@ -35,10 +35,10 @@ def validate(model, split='validation'):
 if __name__ == '__main__':
     # argument parser
     parser = argparse.ArgumentParser(description='PyTorch FlowNetS Training')
-    parser.add_arguemnt('--mode', type=str, default='validation', help='validation or test')
+    parser.add_argument('--mode', type=str, default='validation', help='validation or testing')
     args = parser.parse_args()
     mode = args.mode
-    assert(mode in ['validation', 'test'])
+    assert(mode in ['validation', 'testing'], "mode should be either 'validation' or 'testing'")
 
     
     model = FlowNetS()
