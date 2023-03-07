@@ -22,12 +22,14 @@ from core.dataset_pet import PETDataset
 from core.flowNetS import FlowNetS
 
 
+batch_size = 128
  # main method
 if __name__ == '__main__':
-    # Create arguments parser and parse args
+    # Create arguments parser and parese args
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=350)
     parser.add_argument('--c', type=bool, default=False, help='load from checkpoint')
+    parser
     args = parser.parse_args()
 
     # Create a summary writer
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     dataset = PETDataset()
 
     # Create the data loader
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, )
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True,drop_last=True )
 
     # Define an optimizer
     optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
@@ -99,9 +101,10 @@ if __name__ == '__main__':
             writer.add_scalar("px3", px3, epoch)
             writer.add_scalar("px5", px5, epoch)
             
-        if (epoch+1) % 350 == 0:
+        if (epoch+1) % 100 == 0:
             torch.save(model.state_dict(), 'checkpoints/optical_flow_2d_{}.pt'.format(epoch+1))
 
     # Save the model
+    torch.save(model.state_dict(), 'checkpoints/optical_flow_2d.pt')
     writer.flush()
 

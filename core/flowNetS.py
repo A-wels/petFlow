@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from torch.nn import init
-batch_size = 128
 
 # https://github.com/NVIDIA/flownet2-pytorch/issues/60
 # padding for input data

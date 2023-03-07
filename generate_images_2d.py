@@ -34,7 +34,7 @@ def load_data(path: str, extension: str, slice: str, dataset_name: str):
     list_of_files = sorted(list_of_files)
     
     for i, d in enumerate(list_of_files):
-        if(d.split("_")[1] == slice):
+        if(d.split("_")[1] == slice) or True:
             if i % 8 == 0:
                 datasets.append([])
             datasets[-1].append(d)

@@ -1,6 +1,7 @@
 import torch
 import sys
 import os
+import pytest
 
 sys.path.append(os.getcwd())
 from core.utils.EPELoss import EPELoss
@@ -8,9 +9,19 @@ from core.dataset3dPET import PETDataset3D
 
 # class for testing nn.Module EPELoss
 class TestDatasetPET3d:
-    dataset = PETDataset3D()
+    try:
+        dataset = PETDataset3D()
+    except:
+        print("Dataset not found!")
+        dataset = None
 
+        # skip this test if dataset is None
+    @pytest.mark.skipif(dataset == None,
+                    reason="requires 3D PET dataset")
     def test_load_data(self):
+
+        if self.dataset is None:
+            return
      # Create the data loader
         batch_size = 5
         dataloader = torch.utils.data.DataLoader(self.dataset, batch_size=batch_size, shuffle=True, drop_last=True )

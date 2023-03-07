@@ -34,11 +34,22 @@ def load_demo_data(input_path):
         img1 = read_gen(file_names[i])
         img2 = read_gen(file_names[i+1])
 
-        img1 = np.array(img1).astype(np.uint8)
-        img2 = np.array(img2).astype(np.uint8)
-
         img1 = torch.from_numpy(img1).float()
         img2 = torch.from_numpy(img2).float()
+
+        # set the 40 most left and right pixels to 0
+        img1[0:80,:] = 0
+        img1[-80:,:] = 0
+        img2[0:80,:] = 0
+        img2[-80:,:] = 0
+        import matplotlib
+        matplotlib.image.imsave("viz_results/r000001_130/image/r000001_130_example.png", img1.T)
+
+
+        # clamp img1 and img 2 to [0,1]
+        img1 = torch.clamp(img1, 0,1)
+        img2 = torch.clamp(img2, 0,1)
+
 
         vector_fields.append([img1, img2])
     # get filename: 000221_212_1.v -> 000221_212
@@ -102,8 +113,19 @@ if __name__ == "__main__":
         if not os.path.exists(image_path):
             os.makedirs(image_path)
         output_path = os.path.join(image_path,'{}_{}.png'.format(file_name, i+2))
-        cv2.imwrite(output_path, flow_img[:, :, :])
         generate_vector_visualization(prediction, flow_img, "{}_{}".format(file_name, i+2), output_path)
+
+        from PIL import Image
+        background = Image.open("viz_results/r000001_130/image/r000001_130_example.png")
+
+        background = background.convert("RGBA")
+        flow_img = Image.fromarray(flow_img)
+        flow_img = flow_img.convert("RGBA")
+
+        new_img = Image.blend(background, flow_img, 0.3)
+        new_img.save("viz_results/r000001_130/image/new_{}.png".format(i+2),"PNG")
+
+       # cv2.imwrite(output_path, flow_img[:, :, :])
         list_of_images.append(output_path)
 
     create_gif(list_of_images,image_path, file_name)

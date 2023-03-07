@@ -12,7 +12,7 @@ PERCENTAGE_TRAIN = 0.7
 PERCENTAGE_VALID = 0.2"""
 
 DATA_DIR = "/root/raw_dataset/"
-DATASET_BASE_DIR = "/home/alex/Development/master/data/"
+DATASET_BASE_DIR = "viz_results/images"
 DEFAULT_FILE_ENDING = "v"
 DEFAULT_SLICE = "142"
 IMAGE_DIMENSION =[344,127]

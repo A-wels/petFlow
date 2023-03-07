@@ -10,16 +10,15 @@ from core.dataset_pet import PETDataset
 def validate(model, split='validation'):
     model.eval()
     dataset = PETDataset(split=split)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, )
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False,drop_last=True )
     epe_list = []
     criterion = EPELoss()
     with torch.no_grad():
         for i, data_blob in tqdm(enumerate(dataloader), total=len(dataloader)):
             (inputs, targets,_ ) = [x.cuda() for x in data_blob]            
-            outputs = model(inputs)
+            output = model(inputs)
             # use the first output for loss
-            output_cropped = outputs[0]
-            epe = criterion(output_cropped, targets)
+            epe = criterion(output, targets)
             epe_list.append(epe.detach().cpu())
     print(len(epe_list))
     epe = np.mean(epe_list)
@@ -35,10 +34,9 @@ def validate(model, split='validation'):
 if __name__ == '__main__':
     # argument parser
     parser = argparse.ArgumentParser(description='PyTorch FlowNetS Training')
-    parser.add_argument('--mode', type=str, default='validation', help='validation or testing')
+    parser.add_argument('--testing', action="store_true", help='Specify testing dataset testing')
     args = parser.parse_args()
-    mode = args.mode
-    assert(mode in ['validation', 'testing'], "mode should be either 'validation' or 'testing'")
+    mode = "testing" if args.testing else "validation"
 
     
     model = FlowNetS()
