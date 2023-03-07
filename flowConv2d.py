@@ -10,11 +10,10 @@ import torch.optim as optim
 import numpy as np
 import os
 from glob import glob
-import os.path as osp
-from utils.frame_utils import read_gen
-from utils.EPELoss import EPELoss
+from core.utils.frame_utils import read_gen
+from core.utils.EPELoss import EPELoss
+from core.utils.perceptual_loss import PerceptualLoss
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from torch.nn import init
 from validate import validate
@@ -52,7 +51,7 @@ if __name__ == '__main__':
 
     # Define a loss function
     #criterion = nn.MSELoss()
-    criterion = EPELoss()
+    criterion = PerceptualLoss()
 
     # Define an optimizer
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
@@ -89,11 +88,14 @@ if __name__ == '__main__':
             optimizer.step()
             
         # Print the loss every X epochs
-        if (epoch+1) % 1 == 0:
+        if (epoch+1) % 10 == 0:
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epoch_num, loss.item()))
 
+        # save the model every X epochs
+        if (epoch+1) % 50 == 0:
+            torch.save(model.state_dict(), 'checkpoints/optical_flow_2d_{}.pt'.format(epoch+1))
         # Validate every X epochs
-        if (epoch+1)%100 == 0:
+        if (epoch+1)%50 == 0:
             epe, px1, px3, px5 = validate(model)
             model.train()
             writer.add_scalar("EPE", epe, epoch)
@@ -101,8 +103,7 @@ if __name__ == '__main__':
             writer.add_scalar("px3", px3, epoch)
             writer.add_scalar("px5", px5, epoch)
             
-        if (epoch+1) % 100 == 0:
-            torch.save(model.state_dict(), 'checkpoints/optical_flow_2d_{}.pt'.format(epoch+1))
+       
 
     # Save the model
     torch.save(model.state_dict(), 'checkpoints/optical_flow_2d.pt')

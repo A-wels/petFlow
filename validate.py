@@ -3,6 +3,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from core.utils.EPELoss import EPELoss
+from core.utils.perceptual_loss import PerceptualLoss
 import numpy as np
 from core.flowNetS import FlowNetS
 from core.dataset_pet import PETDataset
@@ -12,7 +13,7 @@ def validate(model, split='validation'):
     dataset = PETDataset(split=split)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False,drop_last=True )
     epe_list = []
-    criterion = EPELoss()
+    criterion = PerceptualLoss()
     with torch.no_grad():
         for i, data_blob in tqdm(enumerate(dataloader), total=len(dataloader)):
             (inputs, targets,_ ) = [x.cuda() for x in data_blob]            
