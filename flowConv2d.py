@@ -27,16 +27,21 @@ if __name__ == '__main__':
     # Create arguments parser and parese args
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=350)
-    parser.add_argument('--c', type=bool, default=False, help='load from checkpoint')
-    parser
+    # continue training?
+    parser.add_argument('--c', action="store_true", help='Continue training?')
+    parser.add_argument('--done_steps', type=int, default=0)
+    parser.add_argument('--log_dir', type=str, default="")
     args = parser.parse_args()
 
+    done_steps = args.done_steps
+
     # Create a summary writer
-    writer = SummaryWriter(log_dir="logs")
+    writer = SummaryWriter(log_dir=os.path.join("logs",args.log_dir))
 
     # Define device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # Define model
+    
+    # Define model and move to device
     model = FlowNetS().to(device)
     
     model = nn.DataParallel(model, [0,1])
@@ -45,7 +50,6 @@ if __name__ == '__main__':
     if args.c:
         model.load_state_dict(torch.load("checkpoints/optical_flow_2d.pt"))
 
-   # model = model.to(device)
     model = model.cuda()
     model.train()
 
@@ -55,14 +59,12 @@ if __name__ == '__main__':
 
     # Define an optimizer
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
-    # Load your data into a numpy array of shape (num_samples, 2, 344, 344, 172)
-
 
     # Create the dataset
     dataset = PETDataset()
 
     # Create the data loader
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True,drop_last=True )
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True )
 
     # Define an optimizer
     optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
@@ -70,6 +72,7 @@ if __name__ == '__main__':
     # Train the model
     epoch_num = args.epochs 
     for epoch in range(epoch_num):
+        epoch+=done_steps
         print("Starting training epoch {} out of {}".format(epoch+1, epoch_num))
         for i, data_blob in tqdm(enumerate(dataloader), total=len(dataloader)):
             (inputs, targets,_ ) = [x.cuda() for x in data_blob]
@@ -95,10 +98,10 @@ if __name__ == '__main__':
         if (epoch+1) % 50 == 0:
             torch.save(model.state_dict(), 'checkpoints/optical_flow_2d_{}.pt'.format(epoch+1))
         # Validate every X epochs
-        if (epoch+1)%50 == 0:
+        if (epoch+1)%200 == 0:
             epe, px1, px3, px5 = validate(model)
             model.train()
-            writer.add_scalar("EPE", epe, epoch)
+            writer.add_scalar("perceptual loss", epe, epoch)
             writer.add_scalar("px1", px1, epoch)
             writer.add_scalar("px3", px3, epoch)
             writer.add_scalar("px5", px5, epoch)

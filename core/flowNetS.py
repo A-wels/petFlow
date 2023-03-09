@@ -53,6 +53,7 @@ class FlowNetS(nn.Module):
         self.conv5_1 = conv(512,  512)
         self.conv6   = conv(512, 1024, stride=2)
         self.conv6_1 = conv(1024, 1024)
+        self.dropout = nn.Dropout2d(p=0.5, inplace=False)
 
         self.deconv5 = deconv(1024,512)
         self.deconv4 = deconv(1026,256)
@@ -81,7 +82,7 @@ class FlowNetS(nn.Module):
                     init.uniform_(m.bias)
                 init.xavier_uniform_(m.weight)
         # init_deconv_bilinear(m.weight)
-        self.upsample1 = nn.Upsample(scale_factor=4, mode='bilinear')
+        self.upsample1 = nn.Upsample(scale_factor=4, mode='bilinear',align_corners=True)
 
 
     def forward(self, x):
@@ -92,7 +93,7 @@ class FlowNetS(nn.Module):
         out_conv3 = self.conv3_1(self.conv3(out_conv2))
         out_conv4 = self.conv4_1(self.conv4(out_conv3))
         out_conv5 = self.conv5_1(self.conv5(out_conv4))
-        out_conv6 = self.conv6_1(self.conv6(out_conv5))
+        out_conv6 = self.dropout(self.conv6_1(self.conv6(out_conv5)))
 
         flow6       = self.predict_flow6(out_conv6)
         flow6_up    = self.upsampled_flow6_to_5(flow6)
@@ -132,6 +133,7 @@ class FlowNetS(nn.Module):
         concat2 = torch.cat((out_conv2,out_deconv2,flow3_up),1)
         flow2 = self.predict_flow2(concat2)
 
+
         if self.training:
             # upsample output with a factor of 4
             flow2 = self.upsample1(flow2)[:,:,0:344,0:127]
@@ -141,7 +143,9 @@ class FlowNetS(nn.Module):
             flow6 = self.upsample1(flow6)[:,:,0:344,0:127]
             return flow2,flow3,flow4,flow5,flow6
         else:
-            flow2 = self.upsample1(flow2)[:,:,0:344,0:127]
+            flow2 = self.upsample1(flow2)
+
+            flow2 = flow2[:,:,0:344,0:127]
             return flow2
 
 

@@ -1,34 +1,61 @@
+from collections import namedtuple
 import torch.nn as nn
 import torch
 import torchvision.models.vgg as vgg
 
-# perceptual loss based on vgg19
+from core.utils.EPELoss import EPELoss
+
+# perceptual loss based on vgg19 and https://towardsdatascience.com/pytorch-implementation-of-perceptual-losses-for-real-time-style-transfer-8d608e2e9902
 class PerceptualLoss(nn.Module):
     def __init__(self):
         super(PerceptualLoss, self).__init__()
-
+        # define loss module 
+        self.vgg_loss = LossVGG()
     def forward(self, pred_flow, gt_flow):
-        # load the vgg model
-        vgg_model = vgg.vgg19(pretrained=True)
-        vgg_features = vgg_model.features
 
-        # set for evaluation
-        for param in vgg_features.parameters():
-            param.requires_grad = False
-
-        # move to gpu
-        vgg_features = vgg_features.cuda()
 
         # add third channel to flow data
         pred_flow = torch.cat((pred_flow, pred_flow[:, 0:1, :, :]), dim=1)
         gt_flow = torch.cat((gt_flow, gt_flow[:, 0:1, :, :]), dim=1)
         
+
+        
         # features for predicted flow
-        pred_flow_features = vgg_features(pred_flow)
+        pred_flow_features = self.vgg_loss(pred_flow)
 
-        # get the features of the ground truth flow
-        gt_flow_features = vgg_features(gt_flow)
+        # features for ground truth flow
+        with torch.no_grad():
+            gt_flow_features = self.vgg_loss(gt_flow)
+        CONTENT_WEIGHT = 1
+        epe_loss = EPELoss()
+        loss = CONTENT_WEIGHT * epe_loss(pred_flow_features[2], gt_flow_features[2]) 
+        return loss
 
-        # calculate the perceptual loss
-        perceptual_loss = torch.norm(pred_flow_features - gt_flow_features, p=2, dim=1).mean()
-        return perceptual_loss
+LossOutput = namedtuple(
+    "LossOutput", ["relu1", "relu2", "relu3", "relu4", "relu5"])
+
+class LossVGG(nn.Module):
+    """Reference:
+    https://discuss.pytorch.org/t/how-to-extract-features-of-an-image-from-a-trained-model/119/3
+    """
+
+    def __init__(self):
+        super(LossVGG, self).__init__()
+        self.vgg_layers = vgg.vgg19(pretrained=True).features
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.vgg_layers.to(device)
+        self.layer_name_mapping = {
+            '3': "relu1",
+            '8': "relu2",
+            '17': "relu3",
+            '26': "relu4",
+            '35': "relu5",
+        }
+
+    def forward(self, x):
+        output = {}
+        for name, module in self.vgg_layers._modules.items():
+            x = module(x)
+            if name in self.layer_name_mapping:
+                output[self.layer_name_mapping[name]] = x
+        return LossOutput(**output)

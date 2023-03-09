@@ -42,8 +42,6 @@ def load_demo_data(input_path):
         img1[-80:,:] = 0
         img2[0:80,:] = 0
         img2[-80:,:] = 0
-        import matplotlib
-        matplotlib.image.imsave("viz_results/r000001_130/image/r000001_130_example.png", img1.T)
 
 
         # clamp img1 and img 2 to [0,1]
@@ -96,6 +94,7 @@ if __name__ == "__main__":
     for i in tqdm(range(len(vector_fields))):
         img1 = vector_fields[i][0]
         img2 = vector_fields[i][1]
+
         input_images = torch.stack([img1,img2], dim=0)
         # add dimension for batch size
         input_images = input_images.unsqueeze(0)
@@ -115,16 +114,16 @@ if __name__ == "__main__":
         output_path = os.path.join(image_path,'{}_{}.png'.format(file_name, i+2))
         generate_vector_visualization(prediction, flow_img, "{}_{}".format(file_name, i+2), output_path)
 
-        from PIL import Image
-        background = Image.open("viz_results/r000001_130/image/r000001_130_example.png")
+        #from PIL import Image
+       # background = Image.open("viz_results/r000001_130/image/r000001_130_example.png")
 
-        background = background.convert("RGBA")
-        flow_img = Image.fromarray(flow_img)
-        flow_img = flow_img.convert("RGBA")
+        #background = background.convert("RGBA")
+       # flow_img = Image.fromarray(flow_img)
+       # flow_img = flow_img.convert("RGBA")
 
-        new_img = Image.blend(background, flow_img, 0.3)
-        new_img.save("viz_results/r000001_130/image/new_{}.png".format(i+2),"PNG")
-
+      #  new_img = Image.blend(background, flow_img, 0.3)
+       # new_img.save("viz_results/r000001_130/image/new_{}.png".format(i+2),"PNG")
+     
        # cv2.imwrite(output_path, flow_img[:, :, :])
         list_of_images.append(output_path)
 
