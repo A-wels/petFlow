@@ -11,6 +11,7 @@ from visualize_gt_flow import create_gif, generate_vector_visualization
 import os
 
 from core.utils.frame_utils import read_gen
+from core.utils.background_noise import add_noise_to_background
 
 def load_model(model_path):
     model = FlowNetS()
@@ -34,16 +35,16 @@ def load_demo_data(input_path):
     for i in range(len(file_names)-1):
         img1 = read_gen(file_names[i])
         img2 = read_gen(file_names[i+1])
+        add_noise_to_background(img1)
 
         img1 = torch.from_numpy(img1).float()
         img2 = torch.from_numpy(img2).float()
 
         # set the 40 most left and right pixels to 0
-        img1[0:80,:] = 0
-        img1[-80:,:] = 0
-        img2[0:80,:] = 0
-        img2[-80:,:] = 0
-
+       # img1[0:80,:] = 0
+       # img1[-80:,:] = 0
+       # img2[0:80,:] = 0
+       # img2[-80:,:] = 0
 
         # clamp img1 and img 2 to [0,1]
         img1_c = torch.clamp(img1, 0,1)

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch
 import torchvision.models.vgg as vgg
 
-from core.utils.EPELoss import EPELoss
+from core.utils.EPELoss import MSELoss
 
 # perceptual loss based on vgg19 and https://towardsdatascience.com/pytorch-implementation-of-perceptual-losses-for-real-time-style-transfer-8d608e2e9902
 class PerceptualLoss(nn.Module):
@@ -18,8 +18,6 @@ class PerceptualLoss(nn.Module):
         pred_flow = torch.cat((pred_flow, pred_flow[:, 0:1, :, :]), dim=1)
         gt_flow = torch.cat((gt_flow, gt_flow[:, 0:1, :, :]), dim=1)
         
-
-        
         # features for predicted flow
         pred_flow_features = self.vgg_loss(pred_flow)
 
@@ -27,8 +25,8 @@ class PerceptualLoss(nn.Module):
         with torch.no_grad():
             gt_flow_features = self.vgg_loss(gt_flow)
         CONTENT_WEIGHT = 1
-        epe_loss = EPELoss()
-        loss = CONTENT_WEIGHT * epe_loss(pred_flow_features[2], gt_flow_features[2]) 
+        mse_loss = MSELoss()
+        loss = CONTENT_WEIGHT * mse_loss(pred_flow_features[2], gt_flow_features[2]) 
         return loss
 
 LossOutput = namedtuple(

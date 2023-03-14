@@ -15,6 +15,7 @@ from torch.nn import init
 from tqdm import tqdm
 import random
 from core.utils.frame_utils import read_gen
+from core.utils.background_noise import add_noise_to_background
 
 # Define a custom dataset class
 class PETDataset(torch.utils.data.Dataset):
@@ -58,6 +59,8 @@ class PETDataset(torch.utils.data.Dataset):
             ## add noise to images
            # img1 = img1 + np.random.normal(0, 0.1, img1.shape)
            # img2 = img2 + np.random.normal(0, 0.1, img2.shape)
+            #img1 = add_noise_to_background(img1)
+            #img2 = add_noise_to_background(img2)
 
             img1 = torch.from_numpy(img1).float()
             img2 = torch.from_numpy(img2).float()
