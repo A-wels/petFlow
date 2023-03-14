@@ -13,24 +13,30 @@ def validate(model, split='validation'):
     dataset = PETDataset(split=split)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False,drop_last=True )
     epe_list = []
-    criterion = PerceptualLoss()
+    perceptual_list = []
+    criterionEPE = EPELoss()
+    criterionPerceptual = PerceptualLoss()
     with torch.no_grad():
         for i, data_blob in tqdm(enumerate(dataloader), total=len(dataloader)):
             (inputs, targets,_ ) = [x.cuda() for x in data_blob]            
             output = model(inputs)
             # use the first output for loss
-            epe = criterion(output, targets)
+            epe = criterionEPE(output, targets)
+            perceptual = criterionPerceptual(output, targets)
             epe_list.append(epe.detach().cpu())
-    print(len(epe_list))
+            perceptual_list.append(perceptual.detach().cpu())
+    # epe: average end point error
     epe = np.mean(epe_list)
+    # perceptual: average perceptual loss
+    perceptual = np.mean(perceptual_list)
     # px1: percentage of pixels with EPE < 1
     px1 = np.mean(np.array(epe_list) < 1)
     # px3: percentage of pixels with EPE < 3
     px3 = np.mean(np.array(epe_list) < 3)
     # px5: percentage of pixels with EPE < 5
     px5 = np.mean(np.array(epe_list) < 5)
-    print("EPE: {:.3f}, px1: {:.3f}, px3: {:.3f}, px5: {:.3f}".format(epe, px1, px3, px5))
-    return epe, px1, px3, px5
+    print("EPE: {:.3f}, px1: {:.3f}, px3: {:.3f}, px5: {:.3f}, perceptual: {:.3f}".format(epe, px1, px3, px5, perceptual))
+    return epe, px1, px3, px5, perceptual
 
 if __name__ == '__main__':
     # argument parser

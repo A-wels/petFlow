@@ -95,16 +95,17 @@ if __name__ == '__main__':
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epoch_num, loss.item()))
 
         # save the model every X epochs
-        if (epoch+1) % 50 == 0:
+        if (epoch+1) % 200 == 0:
             torch.save(model.state_dict(), 'checkpoints/optical_flow_2d_{}.pt'.format(epoch+1))
         # Validate every X epochs
         if (epoch+1)%200 == 0:
-            epe, px1, px3, px5 = validate(model)
+            epe, px1, px3, px5, perceptual = validate(model)
             model.train()
-            writer.add_scalar("perceptual loss", epe, epoch)
+            writer.add_scalar("EPE", epe, epoch)
             writer.add_scalar("px1", px1, epoch)
             writer.add_scalar("px3", px3, epoch)
             writer.add_scalar("px5", px5, epoch)
+            writer.add_scalar("perceptual loss", perceptual, epoch)
             
        
 

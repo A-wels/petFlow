@@ -56,8 +56,8 @@ class PETDataset(torch.utils.data.Dataset):
 
 
             ## add noise to images
-            img1 = img1 + np.random.normal(0, 0.1, img1.shape)
-            img2 = img2 + np.random.normal(0, 0.1, img2.shape)
+           # img1 = img1 + np.random.normal(0, 0.1, img1.shape)
+           # img2 = img2 + np.random.normal(0, 0.1, img2.shape)
 
             img1 = torch.from_numpy(img1).float()
             img2 = torch.from_numpy(img2).float()

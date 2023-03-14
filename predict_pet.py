@@ -30,6 +30,7 @@ def load_demo_data(input_path):
             file_names.append(p)
     
     vector_fields = []
+    vector_fields_unclamped = []
     for i in range(len(file_names)-1):
         img1 = read_gen(file_names[i])
         img2 = read_gen(file_names[i+1])
@@ -45,16 +46,16 @@ def load_demo_data(input_path):
 
 
         # clamp img1 and img 2 to [0,1]
-        img1 = torch.clamp(img1, 0,1)
-        img2 = torch.clamp(img2, 0,1)
+        img1_c = torch.clamp(img1, 0,1)
+        img2_c = torch.clamp(img2, 0,1)
 
-
-        vector_fields.append([img1, img2])
+        vector_fields_unclamped.append([img1, img2])
+        vector_fields.append([img1_c, img2_c])
     # get filename: 000221_212_1.v -> 000221_212
     file_name = file_names[0].split('/')[-1].split('.')[0].split('_')[:-1]
     file_name = '_'.join(file_name)
 
-    return vector_fields, file_name
+    return vector_fields, file_name, vector_fields_unclamped
 
 
 
@@ -82,26 +83,25 @@ if __name__ == "__main__":
     print("Loaded model from {}".format(args.model_path))
     
     # load demo data
-    vector_fields, file_name = load_demo_data(args.input)
+    vector_fields, file_name, vector_fields_unclamped = load_demo_data(args.input)
 
     # move demo data to GPU if available
     for i in range(len(vector_fields)):
-        vector_fields[i][0] = vector_fields[i][0].to(device)
-        vector_fields[i][1] = vector_fields[i][1].to(device)
+        vector_fields[i][0] = vector_fields_unclamped[i][0].to(device)
+        vector_fields[i][1] = vector_fields_unclamped[i][1].to(device)
 
     list_of_images = []
     # predict
     for i in tqdm(range(len(vector_fields))):
-        img1 = vector_fields[i][0]
-        img2 = vector_fields[i][1]
+        img1 = vector_fields_unclamped[i][0]
+        img2 = vector_fields_unclamped[i][1]
 
         input_images = torch.stack([img1,img2], dim=0)
         # add dimension for batch size
         input_images = input_images.unsqueeze(0)
         prediction = model(input_images)
         # remove added dimension for batch size
-        prediction = prediction.squeeze(0).cpu().detach().numpy()
-
+        prediction = prediction.squeeze(0).cpu().detach().numpy()/10
         prediction = np.transpose(prediction, (2,1,0))
         flow_dir = os.path.join(args.output,file_name,'flow')
         if not os.path.exists(flow_dir):
@@ -111,20 +111,24 @@ if __name__ == "__main__":
         image_path = os.path.join(args.output,file_name, 'image')
         if not os.path.exists(image_path):
             os.makedirs(image_path)
+        
+        import matplotlib
+        background_path = os.path.join(image_path,'{}_{}_merge.png'.format(file_name, i+2))
+        matplotlib.image.imsave(background_path, img1.cpu().T)
+
         output_path = os.path.join(image_path,'{}_{}.png'.format(file_name, i+2))
+
         generate_vector_visualization(prediction, flow_img, "{}_{}".format(file_name, i+2), output_path)
 
-        #from PIL import Image
-       # background = Image.open("viz_results/r000001_130/image/r000001_130_example.png")
+        from PIL import Image
+        background = Image.open(background_path)
 
-        #background = background.convert("RGBA")
-       # flow_img = Image.fromarray(flow_img)
-       # flow_img = flow_img.convert("RGBA")
+        background = background.convert("RGBA")
+        flow_img_rgba = Image.fromarray(flow_img).convert("RGBA")
 
-      #  new_img = Image.blend(background, flow_img, 0.3)
-       # new_img.save("viz_results/r000001_130/image/new_{}.png".format(i+2),"PNG")
-     
-       # cv2.imwrite(output_path, flow_img[:, :, :])
+       # new_img = Image.blend(background, flow_img_rgba, 0.3)
+       # new_img.save(background_path,"PNG")
+       # cv2.imwrite(output_path, flow_img)
         list_of_images.append(output_path)
 
     create_gif(list_of_images,image_path, file_name)
